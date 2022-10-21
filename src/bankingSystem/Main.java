@@ -3,6 +3,8 @@ package bankingSystem;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.Scanner;
 
 public class Main {
@@ -21,18 +23,20 @@ public class Main {
 			} else if (action.equals("signup")) {
 				signup();
 			} else if (action.equals("login")) {
-				boolean loggedIn = login();
-				if (loggedIn) {
+				String username = login();
+				if (!username.equals("")) {
 					while (true) {
-						System.out.println("would you like to withdraw, deposit or quit?");
+						System.out.println("would you like to withdraw, deposit, balance or quit?");
 						String loggedAction = input.nextLine();
 						 if (loggedAction.equals("q") || loggedAction.equals("quit")) {
 							System.exit(0);
 						 } else if (loggedAction.equals("withdraw")) {
-							withdraw();
+							withdraw(username);
 						 } else if (loggedAction.equals("deposit")) {
-							deposit();
-						 } else {
+							deposit(username);
+						 } else if (loggedAction.equals("balance")){
+							getBalance(username);
+						 }else {
 							System.out.println("Invalid input, please try again.");
 						 }
 					}
@@ -72,25 +76,36 @@ public class Main {
 		}
 	}
 
-	public static boolean login() throws Exception{
+	public static String login() throws Exception{
 
 		System.out.println("Please enter your username");
-		String username = input.nextLine();
+		String name = input.nextLine();
 
-		if (username == "username") {
-			while (true) {
-				System.out.println("Please enter your password");
-				String password = input.nextLine();
-				if (password == "password") {
-					return true;
-				} else {
-					System.out.println("Password is wrong, please try again.");
+		Connection conn = getConnection();
+		Statement stmt = conn.createStatement();
+		ResultSet rs=stmt.executeQuery("SELECT * FROM user WHERE name = '"+name+"'");
+		while(rs.next()){
+			String userName = rs.getString("name");
+			String userPassword = rs.getString("password");
+			
+			if (name.equals(userName)) {
+				while (true) {
+					System.out.println("Please enter your password");
+					String password = input.nextLine();
+					if (password.equals(userPassword)) {
+						return userName;
+					} else {
+						System.out.println("Password is wrong, please try again.");
+					}
 				}
+			} else {
+				System.out.println("username does not exists.");
 			}
-		} else {
-			System.out.println("username does not exists.");
+			return "";
 		}
-		return false;
+		return "";
+		
+
 	}
 
 	public static String signup() {
@@ -124,16 +139,28 @@ public class Main {
 		}
 	}
 
-	public static void deposit() {
+	public static double deposit(String username) throws Exception {
 		System.out.println("What is the amount you want to deposit?");
 		double amount = input.nextDouble();
 		System.out.println(amount);
+		return amount;
 	}
 
-	public static void withdraw() {
+	public static double withdraw(String username) {
 		System.out.println("What is the amount you want to withdraw?");
 		double amount = input.nextDouble();
 		System.out.println(amount);
+		return amount;
+	}
+
+	public static void getBalance(String name) throws Exception {
+		Connection conn = getConnection();
+		Statement stmt = conn.createStatement();
+		ResultSet rs=stmt.executeQuery("SELECT * FROM user WHERE name = '"+name+"'");
+		while(rs.next()){
+			double amount = rs.getDouble("balance");
+			System.out.println(amount);
+		}
 	}
 
 }
