@@ -23,7 +23,19 @@ public class Main {
 			} else if (action.equals("login")) {
 				boolean loggedIn = login();
 				if (loggedIn) {
-					System.out.println("You are now logged in.");
+					while (true) {
+						System.out.println("would you like to withdraw, deposit or quit?");
+						String loggedAction = input.nextLine();
+						 if (loggedAction.equals("q") || loggedAction.equals("quit")) {
+							System.exit(0);
+						 } else if (loggedAction.equals("withdraw")) {
+							withdraw();
+						 } else if (loggedAction.equals("deposit")) {
+							deposit();
+						 } else {
+							System.out.println("Invalid input, please try again.");
+						 }
+					}
 				}
 			} else {
 				System.out.println("Invalid input, please try again.");
@@ -111,4 +123,17 @@ public class Main {
 			return username;
 		}
 	}
+
+	public static void deposit() {
+		System.out.println("What is the amount you want to deposit?");
+		double amount = input.nextDouble();
+		System.out.println(amount);
+	}
+
+	public static void withdraw() {
+		System.out.println("What is the amount you want to withdraw?");
+		double amount = input.nextDouble();
+		System.out.println(amount);
+	}
+
 }
