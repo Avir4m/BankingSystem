@@ -28,17 +28,17 @@ public class Main {
 					while (true) {
 						System.out.println("would you like to withdraw, deposit, balance or quit?");
 						String loggedAction = input.nextLine();
-						 if (loggedAction.equals("q") || loggedAction.equals("quit")) {
-							System.exit(0);
-						 } else if (loggedAction.equals("withdraw")) {
-							withdraw(username);
-						 } else if (loggedAction.equals("deposit")) {
-							deposit(username);
-						 } else if (loggedAction.equals("balance")){
-							getBalance(username);
-						 }else {
-							System.out.println("Invalid input, please try again.");
-						 }
+						if (loggedAction.equals("q") || loggedAction.equals("quit")) {
+						System.exit(0);
+						} else if (loggedAction.equals("withdraw")) {
+						withdraw(username);
+						} else if (loggedAction.equals("deposit")) {
+						deposit(username);
+						} else if (loggedAction.equals("balance")){
+						getBalance(username);
+						} else {
+						System.out.println("Invalid input, please try again.");
+						}
 					}
 				}
 			} else {
@@ -56,7 +56,6 @@ public class Main {
             Class.forName(driver);
 
             Connection conn = DriverManager.getConnection(url, username, password);
-            System.out.println("Connected");
             return conn;
 
         } catch (Exception e) {
@@ -142,14 +141,30 @@ public class Main {
 	public static double deposit(String username) throws Exception {
 		System.out.println("What is the amount you want to deposit?");
 		double amount = input.nextDouble();
-		System.out.println(amount);
+		Connection conn = getConnection();
+		Statement stmt = conn.createStatement();
+		ResultSet rs=stmt.executeQuery("SELECT * FROM user WHERE name = '"+username+"'");
+		while(rs.next()){
+			double balance = rs.getDouble("balance");
+			double newBalance = balance + amount;
+			PreparedStatement withdraw = conn.prepareStatement("UPDATE user SET balance = '"+newBalance+"' WHERE name = '"+username+"'");
+			withdraw.executeUpdate();
+		}
 		return amount;
 	}
 
-	public static double withdraw(String username) {
+	public static double withdraw(String username) throws Exception {
 		System.out.println("What is the amount you want to withdraw?");
 		double amount = input.nextDouble();
-		System.out.println(amount);
+		Connection conn = getConnection();
+		Statement stmt = conn.createStatement();
+		ResultSet rs=stmt.executeQuery("SELECT * FROM user WHERE name = '"+username+"'");
+		while(rs.next()){
+			double balance = rs.getDouble("balance");
+			double newBalance = balance - amount;
+			PreparedStatement withdraw = conn.prepareStatement("UPDATE user SET balance = '"+newBalance+"' WHERE name = '"+username+"'");
+			withdraw.executeUpdate();
+		}
 		return amount;
 	}
 
@@ -158,8 +173,8 @@ public class Main {
 		Statement stmt = conn.createStatement();
 		ResultSet rs=stmt.executeQuery("SELECT * FROM user WHERE name = '"+name+"'");
 		while(rs.next()){
-			double amount = rs.getDouble("balance");
-			System.out.println(amount);
+			double balance = rs.getDouble("balance");
+			System.out.println(balance);
 		}
 	}
 
