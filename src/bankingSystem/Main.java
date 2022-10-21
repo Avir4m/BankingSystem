@@ -26,16 +26,18 @@ public class Main {
 				String username = login();
 				if (!username.equals("")) {
 					while (true) {
-						System.out.println("would you like to withdraw, deposit, balance or quit?");
+						System.out.println("would you like to: withdraw, deposit, balance, delete account or quit?");
 						String loggedAction = input.nextLine();
 						if (loggedAction.equals("q") || loggedAction.equals("quit")) {
-						System.exit(0);
+							System.exit(0);
 						} else if (loggedAction.equals("withdraw")) {
-						withdraw(username);
+							withdraw(username);
 						} else if (loggedAction.equals("deposit")) {
-						deposit(username);
-						} else if (loggedAction.equals("balance")){
-						getBalance(username);
+							deposit(username);
+						} else if (loggedAction.equals("balance")) {
+							getBalance(username);
+						} else if (loggedAction.equals("delete account")) {
+							deleteAccount(username);
 						} else {
 						System.out.println("Invalid input, please try again.");
 						}
@@ -54,14 +56,11 @@ public class Main {
             String username = "root";
             String password = "1234";
             Class.forName(driver);
-
             Connection conn = DriverManager.getConnection(url, username, password);
             return conn;
-
         } catch (Exception e) {
             System.out.println(e);
         }
-
         return null;
     }
 
@@ -76,17 +75,14 @@ public class Main {
 	}
 
 	public static String login() throws Exception{
-
 		System.out.println("Please enter your username");
 		String name = input.nextLine();
-
 		Connection conn = getConnection();
 		Statement stmt = conn.createStatement();
 		ResultSet rs=stmt.executeQuery("SELECT * FROM user WHERE name = '"+name+"'");
-		while(rs.next()){
+		while(rs.next()) {
 			String userName = rs.getString("name");
 			String userPassword = rs.getString("password");
-			
 			if (name.equals(userName)) {
 				while (true) {
 					System.out.println("Please enter your password");
@@ -138,44 +134,75 @@ public class Main {
 		}
 	}
 
-	public static double deposit(String username) throws Exception {
+	public static void deposit(String username) throws Exception {
 		System.out.println("What is the amount you want to deposit?");
 		double amount = input.nextDouble();
+		input.nextLine();
 		Connection conn = getConnection();
 		Statement stmt = conn.createStatement();
 		ResultSet rs=stmt.executeQuery("SELECT * FROM user WHERE name = '"+username+"'");
-		while(rs.next()){
+		while(rs.next()) {
 			double balance = rs.getDouble("balance");
 			double newBalance = balance + amount;
 			PreparedStatement withdraw = conn.prepareStatement("UPDATE user SET balance = '"+newBalance+"' WHERE name = '"+username+"'");
 			withdraw.executeUpdate();
 		}
-		return amount;
 	}
 
-	public static double withdraw(String username) throws Exception {
+	public static void withdraw(String username) throws Exception {
 		System.out.println("What is the amount you want to withdraw?");
 		double amount = input.nextDouble();
+		input.nextLine();
 		Connection conn = getConnection();
 		Statement stmt = conn.createStatement();
 		ResultSet rs=stmt.executeQuery("SELECT * FROM user WHERE name = '"+username+"'");
-		while(rs.next()){
+		while(rs.next()) {
 			double balance = rs.getDouble("balance");
 			double newBalance = balance - amount;
-			PreparedStatement withdraw = conn.prepareStatement("UPDATE user SET balance = '"+newBalance+"' WHERE name = '"+username+"'");
-			withdraw.executeUpdate();
+			if (newBalance < 0) {
+				System.out.println("You can't withdraw more then your current balance'");
+			} else {
+				PreparedStatement withdraw = conn.prepareStatement("UPDATE user SET balance = '"+newBalance+"' WHERE name = '"+username+"'");
+				withdraw.executeUpdate();
+			}
 		}
-		return amount;
 	}
 
 	public static void getBalance(String name) throws Exception {
 		Connection conn = getConnection();
 		Statement stmt = conn.createStatement();
 		ResultSet rs=stmt.executeQuery("SELECT * FROM user WHERE name = '"+name+"'");
-		while(rs.next()){
+		while(rs.next()) {
 			double balance = rs.getDouble("balance");
 			System.out.println(balance);
 		}
 	}
 
+	private static void deleteAccount(String username) throws Exception {
+		System.out.println("Are you sure you want to delete account? y/n");
+		String accountDeleteConfirm = input.nextLine();
+		if (accountDeleteConfirm.equals("y")) {
+			Connection conn = getConnection();
+			Statement stmt = conn.createStatement();
+			ResultSet rs=stmt.executeQuery("SELECT * FROM user WHERE name = '"+username+"'");
+			while(rs.next()) {
+				String userPassword = rs.getString("password");
+				while (true) {
+					System.out.println("Please enter your password(q to quit):");
+					String password = input.nextLine();
+					if (password.equals(userPassword)) {
+						PreparedStatement st = conn.prepareStatement("DELETE FROM user WHERE name = '"+username+"';");
+						st.executeUpdate();
+						System.out.println("Your account has been deleted.");
+						System.exit(0);
+					} else if (password.equals("q") || password.equals("quit")) {
+						System.exit(0);
+					}
+					else {
+						System.out.println("Wrong password, please try again.");
+					}
+				}
+			}
+		}
+	}
 }
